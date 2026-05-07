@@ -160,7 +160,7 @@ const RED = '#bb0000';
 const DARK = '#333333';   // only for non-critical secondary text; still legible on e-ink
 
 // Typography — thick sans-serif only; hairline serifs disappear on e-ink
-const FONT_WEEKDAY = 'bold 42px sans-serif';
+const FONT_WEEKDAY = 'bold 32px sans-serif';
 const FONT_DATE = 'bold 16px sans-serif';
 const FONT_SECTION = 'bold 13px sans-serif';
 const FONT_BODY = '16px sans-serif';
@@ -267,18 +267,19 @@ async function render() {
   drawThickRule(ctx, y);
   y += 10;
 
-  // Weekday — large serif
+  // Single-line masthead: weekday left, date right — baseline-aligned
+  const HEADER_H = 34;
   ctx.fillStyle = BLACK;
   ctx.font = FONT_WEEKDAY;
-  ctx.fillText(weekday, PAD, y + 34);
+  ctx.fillText(weekday, PAD, y + HEADER_H);
 
-  // Date — below weekday
   ctx.fillStyle = DARK;
   ctx.font = FONT_DATE;
-  ctx.fillText(date, PAD, y + 54);
-  y += 64;
+  const dateW = ctx.measureText(date).width;
+  ctx.fillText(date, W - PAD - dateW, y + HEADER_H);
+  y += HEADER_H + 8;
 
-  // Double rule under masthead
+  // Rule under masthead
   drawThickRule(ctx, y);
   y += 12;
 
@@ -353,46 +354,62 @@ async function render() {
     ctx.fillText('Žádné nové známky.', PAD, y + 14);
     y += LINE_H;
   } else {
+    // 2-column grid — up to 6 marks (3 rows × 2 cols)
+    const COL_COUNT = 2;
+    const COL_GAP = 16;
+    const COL_W = Math.floor((W - PAD * 2 - COL_GAP) / 2);
+    const ROW_H = 42;
+    const GRADE_W = 28; // reserved width for the grade digit(s)
+
     for (let i = 0; i < marks.length; i++) {
+      const col = i % COL_COUNT;
+      const row = Math.floor(i / COL_COUNT);
+      const cellX = PAD + col * (COL_W + COL_GAP);
+      const cellY = y + row * ROW_H + 4;
+
       const m = marks[i];
-      const rowY = y + 20;
-
-      // Grade value — large, red for bad grades (4, 5), black otherwise
       const gradeNum = parseInt(m.grade, 10);
-      ctx.font = FONT_GRADE;
-      ctx.fillStyle = gradeNum >= 4 ? RED : BLACK;
-      ctx.fillText(m.grade, PAD, rowY);
-      const gradeW = ctx.measureText(m.grade).width;
+      const isBad = gradeNum >= 4;
 
-      // Subject — bold
-      const infoX = PAD + gradeW + 12;
+      // Grade — huge numeral, vertically centred
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillStyle = isBad ? RED : BLACK;
+      const gradeStr = m.grade;
+      const gradeW = ctx.measureText(gradeStr).width;
+      ctx.fillText(gradeStr, cellX, cellY + 30);
+
+      // Text column — starts after grade
+      const textX = cellX + gradeW + 10;
+      const textMaxW = COL_W - gradeW - 10;
+
+      // Subject + caption — bold subject, regular caption, single line
+      ctx.font = 'bold 15px sans-serif';
       ctx.fillStyle = BLACK;
-      ctx.font = FONT_BODY_BOLD;
-      ctx.fillText(m.subjectName, infoX, rowY - 1);
+      const subjW = ctx.measureText(m.subjectName).width;
+      ctx.fillText(truncateToWidth(ctx, m.subjectName, textMaxW), textX, cellY + 18);
 
-      // Caption + date — dark, same line if fits, otherwise below
-      ctx.fillStyle = DARK;
       ctx.font = '14px sans-serif';
-      const captionText = m.caption ? `${m.caption}  ·  ${formatMarkDate(m.date)}` : formatMarkDate(m.date);
-      const subjW = (() => {
-        ctx.font = FONT_BODY_BOLD;
-        return ctx.measureText(m.subjectName).width;
-      })();
-      ctx.font = '14px sans-serif';
-      const captionX = infoX + subjW + 8;
-      if (ctx.measureText(captionText).width + captionX < W - PAD) {
-        ctx.fillText(captionText, captionX, rowY - 1);
-      } else {
-        ctx.fillText(truncateToWidth(ctx, captionText, W - PAD - infoX), infoX, rowY + 15);
-        y += 15;
+      ctx.fillStyle = BLACK;
+      const captionX = textX + Math.min(subjW, textMaxW) + 6;
+      const captionMaxW = cellX + COL_W - captionX;
+      if (captionMaxW > 10 && m.caption) {
+        ctx.fillText(truncateToWidth(ctx, m.caption, captionMaxW), captionX, cellY + 18);
       }
 
-      y += 28;
+      // Date — small, dark gray, second row
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = DARK;
+      ctx.fillText(formatMarkDate(m.date), textX, cellY + 34);
 
-      if (i < marks.length - 1) {
-        drawHairline(ctx, y - 4, PAD, W - PAD);
+      // Hairline below each full row (not after last row)
+      const isLastRow = row === Math.floor((marks.length - 1) / COL_COUNT);
+      if (!isLastRow && col === COL_COUNT - 1) {
+        drawHairline(ctx, cellY + ROW_H - 2, PAD, W - PAD);
       }
     }
+
+    const rowCount = Math.ceil(marks.length / COL_COUNT);
+    y += rowCount * ROW_H;
   }
 
   y += 4;
