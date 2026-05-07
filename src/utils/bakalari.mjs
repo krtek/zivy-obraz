@@ -362,7 +362,8 @@ function extractLessonsFromTimetableDay(day, targetDay, subjectsById = {}, hours
         teacher: extractTeacherName(lesson),
         room: extractRoomName(lesson),
         removed: isLessonRemoved(lesson),
-        note: extractLessonNote(lesson)
+        note: extractLessonNote(lesson),
+        theme: lesson?.Theme ?? lesson?.theme ?? ''
       };
     })
     .filter(lesson => Boolean(lesson.subjectName) || Boolean(lesson.room) || lesson.order !== null);
