@@ -2,7 +2,7 @@ name: Dashboard Sync
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -16,8 +16,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - run: npm ci
 
@@ -28,8 +28,8 @@ jobs:
             --bakalari-username="${{ secrets.BAKALARI_USERNAME }}" \
             --bakalari-password="${{ secrets.BAKALARI_PASSWORD }}" \
             --golemio-token="${{ secrets.GOLEMIO_API }}" \
-            --stop-id-1="U40Z2P" \
-            --stop-id-2="U40Z1P" \
+            --stop-id-1="${{ secrets.STOP_1 }}" \
+            --stop-id-2="${{ secrets.STOP_2 }}" \
             --output="dashboard/dashboard.png"
 
       - name: Commit dashboard image
