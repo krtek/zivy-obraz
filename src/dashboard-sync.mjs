@@ -263,10 +263,6 @@ async function render() {
   y = 16;
   const { weekday, date } = makeDateHeader(targetDay);
 
-  // Thick top rule
-  drawThickRule(ctx, y);
-  y += 10;
-
   // Single-line masthead: weekday left, date right — baseline-aligned
   const HEADER_H = 34;
   ctx.fillStyle = BLACK;
