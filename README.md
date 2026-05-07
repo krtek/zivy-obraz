@@ -27,7 +27,7 @@ Přihlašovací údaje uložte do souboru `.env.local` (není commitován). Nač
 ```shell
 set -a && source .env.local && set +a
 
-node src/dashboard-sync.mjs --bakalari-base-url="$BAKALARI_BASE_URL" --bakalari-username="$BAKALARI_USERNAME" --bakalari-password="$BAKALARI_PASSWORD" --golemio-token="$GOLEMIO_API" --stop-id-1="U40Z2P" --stop-id-2="U40Z1P"
+node src/dashboard-sync.mjs --bakalari-base-url="$BAKALARI_BASE_URL" --bakalari-username="$BAKALARI_USERNAME" --bakalari-password="$BAKALARI_PASSWORD" --golemio-token="$GOLEMIO_API" --stop-id-1="$STOP_1" --stop-id-2="$STOP_2" --output="dashboard/dashboard.png"
 ```
 
 ---

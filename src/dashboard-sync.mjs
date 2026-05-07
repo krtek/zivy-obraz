@@ -540,10 +540,6 @@ async function render() {
       }
 
       y += DEP_LINE_H;
-
-      if (i < departures.length - 1) {
-        drawHairline(ctx, y - 4, PAD, W - PAD);
-      }
     }
   }
 

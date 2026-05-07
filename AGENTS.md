@@ -34,8 +34,9 @@ node src/dashboard-sync.mjs \
   --bakalari-username="$BAKALARI_USERNAME" \
   --bakalari-password="$BAKALARI_PASSWORD" \
   --golemio-token="$GOLEMIO_API" \
-  --stop-id-1="U40Z2P" \
-  --stop-id-2="U40Z1P"
+  --stop-id-1="$STOP_1" \
+  --stop-id-2="$STOP_2" \
+  --output="dashboard/dashboard.png"
 ```
 
 Positional order (fallback): matches the usage message printed on missing args. `--output` defaults to `dashboard.png`.
