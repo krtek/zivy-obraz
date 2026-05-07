@@ -215,7 +215,7 @@ ${JSON.stringify(result, null, 2)}`;
     const weekLabel = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' }).format(now);
 
     const { error } = await resend.emails.send({
-      from: smtpFrom ?? `Sebíkův školní přehled <noreply@krtinec.cz>`,
+      from: smtpFrom ?? `Školní přehled <noreply@krtinec.cz>`,
       to: emailTo,
       subject: `Co probíral ${emailKid} ve škole — týden do ${weekLabel}`,
       html: summary
