@@ -247,8 +247,8 @@ async function render() {
     fetchTimetableForDay(targetDay).toPromise(),
     fetchHomeworks(fromDate, toDate).toPromise(),
     fetchLatestMarks(),
-    fetchDepartures(stopId1),
-    fetchDepartures(stopId2)
+    Promise.resolve([]),
+    Promise.resolve([])
   ]);
 
   const canvas = createCanvas(W, H);
