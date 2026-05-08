@@ -237,7 +237,9 @@ function drawSectionLabel(ctx, label, y) {
 
 async function render() {
   const targetDay = resolveTargetDay(now);
-  const fromDate = startOfUtcDay(now);
+  const today = startOfUtcDay(now);
+  const isShowingNextDay = targetDay.getTime() !== today.getTime();
+  const fromDate = today;
   const toDate = new Date(fromDate);
   toDate.setMonth(toDate.getMonth() + 1);
 
@@ -259,9 +261,9 @@ async function render() {
 
   let y = 0;
 
-  // ── masthead ───────────────────────────────────────────────────────────────
+  // ── masthead — always shows today ─────────────────────────────────────────
   y = 16;
-  const { weekday, date } = makeDateHeader(targetDay);
+  const { weekday, date } = makeDateHeader(today);
 
   // Single-line masthead: weekday left, date right — baseline-aligned
   const HEADER_H = 34;
@@ -280,7 +282,10 @@ async function render() {
   y += 12;
 
   // ── timetable ──────────────────────────────────────────────────────────────
-  y = drawSectionLabel(ctx, 'Rozvrh', y);
+  const timetableLabel = isShowingNextDay
+    ? `Rozvrh — ${new Intl.DateTimeFormat('cs-CZ', { weekday: 'long', timeZone: timezone }).format(targetDay)}`
+    : 'Rozvrh';
+  y = drawSectionLabel(ctx, timetableLabel, y);
   y += 4;
 
   const LINE_H = 26;
@@ -329,10 +334,6 @@ async function render() {
       }
 
       y += LINE_H;
-
-      if (i < lessons.length - 1) {
-        drawHairline(ctx, y - 4, SUBJ_X, W - PAD);
-      }
     }
   }
 
