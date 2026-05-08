@@ -288,7 +288,7 @@ async function render() {
   y = drawSectionLabel(ctx, timetableLabel, y);
   y += 4;
 
-  const LINE_H = 26;
+  const LINE_H = 22;
   const TIME_W = 52;
   const SUBJ_X = PAD + TIME_W + 8;
 
@@ -300,13 +300,14 @@ async function render() {
   } else {
     for (let i = 0; i < lessons.length; i++) {
       const lesson = lessons[i];
-      const rowY = y + LINE_H - 6;
+      const rowY = y + LINE_H - 4;
 
-      // Time column — monospace, black
+      // Time column — monospace, black, right-aligned
       ctx.fillStyle = BLACK;
       ctx.font = FONT_TIME_COL;
       const slot = lesson.beginTime ? lesson.beginTime : `${lesson.order}.`;
-      ctx.fillText(slot, PAD, rowY);
+      const slotW = ctx.measureText(slot).width;
+      ctx.fillText(slot, PAD + TIME_W - slotW, rowY);
 
       // Subject name
       const parts = [lesson.subjectName];
