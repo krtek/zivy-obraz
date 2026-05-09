@@ -74,26 +74,28 @@ function resolveTargetDay(now) {
   return next;
 }
 
-// ── fetch marks (inline, same pattern as marks-sync) ────────────────────────
-async function fetchLatestMarks() {
+// ── shared Bakaláři auth ─────────────────────────────────────────────────────
+async function bakalariLogin() {
   const baseUrl = bakalariBaseUrl.trim().replace(/\/$/, '');
-  const fromDate = new Date(now);
-  fromDate.setMonth(fromDate.getMonth() - 1);
-
   const body = new URLSearchParams({
     client_id: 'ANDR',
     grant_type: 'password',
     username: bakalariUsername,
     password: bakalariPassword
   });
-
   const loginRes = await axios.post(`${baseUrl}/api/login`, body, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   });
-
   if (!loginRes.data?.access_token) throw new Error('Bakaláři login failed.');
+  return { baseUrl, token: loginRes.data.access_token };
+}
 
-  const token = loginRes.data.access_token;
+// ── fetch marks (inline, same pattern as marks-sync) ────────────────────────
+async function fetchLatestMarks() {
+  const { baseUrl, token } = await bakalariLogin();
+  const fromDate = new Date(now);
+  fromDate.setMonth(fromDate.getMonth() - 1);
+
   const res = await axios.get(`${baseUrl}/api/3/marks`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { from: fromDate.toISOString().split('T')[0], to: now.toISOString().split('T')[0] }
@@ -114,6 +116,31 @@ async function fetchLatestMarks() {
     .filter(m => m.grade && !isNaN(m.date.getTime()))
     .sort((a, b) => b.date - a.date)
     .slice(0, 6);
+}
+
+// ── fetch subject averages ───────────────────────────────────────────────────
+const AVERAGE_SUBJECTS = [
+  { abbrev: 'Cj', label: 'Čeština' },
+  { abbrev: 'M', label: 'Matematika' },
+  { abbrev: 'F', label: 'Fyzika' },
+  { abbrev: 'Aj', label: 'Angličtina' }
+];
+
+async function fetchSubjectAverages() {
+  const { baseUrl, token } = await bakalariLogin();
+  const res = await axios.get(`${baseUrl}/api/3/marks`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const subjects = res.data?.Subjects ?? [];
+  const byAbbrev = new Map(subjects.map(s => [s.Subject?.Abbrev?.trim(), s]));
+
+  return AVERAGE_SUBJECTS.map(({ abbrev, label }) => {
+    const entry = byAbbrev.get(abbrev);
+    const rawAvg = entry?.AverageText?.trim().replace(',', '.') ?? null;
+    const avg = rawAvg ? parseFloat(rawAvg) : null;
+    return { abbrev, label, avg };
+  });
 }
 
 // ── fetch departures from Golemio ────────────────────────────────────────────
@@ -243,10 +270,11 @@ async function render() {
   const toDate = new Date(fromDate);
   toDate.setMonth(toDate.getMonth() + 1);
 
-  const [lessons, homeworks, marks, departuresSchool, departuresCity] = await Promise.all([
+  const [lessons, homeworks, marks, subjectAverages, departuresSchool, departuresCity] = await Promise.all([
     fetchTimetableForDay(targetDay).toPromise(),
     fetchHomeworks(fromDate, toDate).toPromise(),
     fetchLatestMarks(),
+    fetchSubjectAverages(),
     Promise.resolve([]),
     Promise.resolve([])
   ]);
@@ -474,6 +502,48 @@ async function render() {
         drawHairline(ctx, y - 6, PAD, W - PAD);
       }
     }
+  }
+
+  // ── subject averages ───────────────────────────────────────────────────────
+  y += 4;
+  drawThickRule(ctx, y);
+  y += 12;
+
+  y = drawSectionLabel(ctx, 'Průměry', y);
+  y += 4;
+
+  {
+    const CELL_W = Math.floor((W - PAD * 2) / 4);
+    const CELL_H = 52;
+
+    for (let i = 0; i < subjectAverages.length; i++) {
+      const { label, avg } = subjectAverages[i];
+      const cellX = PAD + i * CELL_W;
+      const isBad = avg !== null && avg > 3;
+
+      // Subject label
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = BLACK;
+      ctx.fillText(label, cellX, y + 14);
+
+      // Average value — large
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillStyle = isBad ? RED : BLACK;
+      const avgStr = avg !== null ? avg.toFixed(2).replace('.', ',') : '—';
+      ctx.fillText(avgStr, cellX, y + 46);
+
+      // Vertical divider between cells
+      if (i > 0) {
+        ctx.strokeStyle = DARK;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cellX - 8, y);
+        ctx.lineTo(cellX - 8, y + CELL_H);
+        ctx.stroke();
+      }
+    }
+
+    y += CELL_H;
   }
 
   // ── departures ─────────────────────────────────────────────────────────────
