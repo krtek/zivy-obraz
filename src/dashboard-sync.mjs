@@ -519,7 +519,7 @@ async function render() {
     for (let i = 0; i < subjectAverages.length; i++) {
       const { label, avg } = subjectAverages[i];
       const cellX = PAD + i * CELL_W;
-      const isBad = avg !== null && avg > 3;
+      const isBad = avg !== null && avg >= 3.5;
 
       // Subject label
       ctx.font = 'bold 12px sans-serif';
