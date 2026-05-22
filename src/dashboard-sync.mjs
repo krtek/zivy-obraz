@@ -494,9 +494,34 @@ async function render() {
       ctx.fillStyle = BLACK;
       ctx.font = FONT_BODY;
       const content = (hw.content || 'Bez popisu').replace(/\s+/g, ' ');
-      ctx.fillText(truncateToWidth(ctx, content, W - PAD - contentX - subjLabelW), contentX + subjLabelW, rowY);
+      const contentAvailW = W - PAD - contentX - subjLabelW;
+      let usedTwoLines = false;
 
-      y += 28;
+      if (ctx.measureText(content).width <= contentAvailW) {
+        ctx.fillText(content, contentX + subjLabelW, rowY);
+      } else {
+        // Find how much fits on line 1
+        let lo = 0, hi = content.length;
+        while (lo < hi) {
+          const mid = Math.ceil((lo + hi) / 2);
+          if (ctx.measureText(content.slice(0, mid)).width <= contentAvailW) lo = mid;
+          else hi = mid - 1;
+        }
+        // Break at last space if possible
+        let breakAt = lo;
+        const spaceIdx = content.lastIndexOf(' ', lo);
+        if (spaceIdx > 0) breakAt = spaceIdx;
+
+        const line1 = content.slice(0, breakAt).trimEnd();
+        const line2 = content.slice(breakAt).trimStart();
+        const line2MaxW = W - PAD - contentX;
+
+        ctx.fillText(line1, contentX + subjLabelW, rowY);
+        ctx.fillText(truncateToWidth(ctx, line2, line2MaxW), contentX, rowY + 18);
+        usedTwoLines = true;
+      }
+
+      y += usedTwoLines ? 46 : 28;
 
       if (i < hwList.length - 1) {
         drawHairline(ctx, y - 6, PAD, W - PAD);
