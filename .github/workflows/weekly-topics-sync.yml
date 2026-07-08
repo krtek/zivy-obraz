@@ -3,7 +3,7 @@ name: Weekly Topics Sync
 on:
   schedule:
     # Paused for summer break (Jul-Aug), resumes automatically Sep 1
-    - cron: "0 13 1-6,9-12 * 3"
+    - cron: "0 13 * 1-6,9-12 3"
   workflow_dispatch:
 
 jobs:

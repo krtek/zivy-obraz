@@ -3,7 +3,7 @@ name: Dashboard Sync
 on:
   schedule:
     # Paused for summer break (Jul-Aug), resumes automatically Sep 1
-    - cron: "*/30 * 1-6,9-12 *"
+    - cron: "*/30 * * 1-6,9-12 *"
   workflow_dispatch:
 
 jobs:
