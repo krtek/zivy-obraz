@@ -64,7 +64,7 @@ function resolveTargetDay(now) {
     return next;
   }
 
-  if (hour < 16) return base;
+  if (hour < 14) return base;
 
   const next = new Date(base);
   next.setUTCDate(next.getUTCDate() + 1);
@@ -265,7 +265,6 @@ function drawSectionLabel(ctx, label, y) {
 async function render() {
   const targetDay = resolveTargetDay(now);
   const today = startOfUtcDay(now);
-  const isShowingNextDay = targetDay.getTime() !== today.getTime();
   const fromDate = today;
   const toDate = new Date(fromDate);
   toDate.setMonth(toDate.getMonth() + 1);
@@ -310,9 +309,7 @@ async function render() {
   y += 12;
 
   // ── timetable ──────────────────────────────────────────────────────────────
-  const timetableLabel = isShowingNextDay
-    ? `Rozvrh — ${new Intl.DateTimeFormat('cs-CZ', { weekday: 'long', timeZone: timezone }).format(targetDay)}`
-    : 'Rozvrh';
+  const timetableLabel = `Rozvrh — ${new Intl.DateTimeFormat('cs-CZ', { weekday: 'long', timeZone: timezone }).format(targetDay)}`;
   y = drawSectionLabel(ctx, timetableLabel, y);
   y += 4;
 
