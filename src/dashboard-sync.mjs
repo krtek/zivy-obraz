@@ -5,6 +5,8 @@ import axios from 'axios';
 import { createBakalariClient } from './utils/bakalari.mjs';
 import { describeRelativeDay, startOfUtcDay } from './utils/util.mjs';
 
+const BAKALARI_TIMEOUT_MS = 60000;
+
 const { values, positionals } = parseArgs({
   options: {
     'bakalari-base-url': { type: 'string' },
@@ -84,7 +86,8 @@ async function bakalariLogin() {
     password: bakalariPassword
   });
   const loginRes = await axios.post(`${baseUrl}/api/login`, body, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    timeout: BAKALARI_TIMEOUT_MS
   });
   if (!loginRes.data?.access_token) throw new Error('Bakaláři login failed.');
   return { baseUrl, token: loginRes.data.access_token };
@@ -98,7 +101,8 @@ async function fetchLatestMarks() {
 
   const res = await axios.get(`${baseUrl}/api/3/marks`, {
     headers: { Authorization: `Bearer ${token}` },
-    params: { from: fromDate.toISOString().split('T')[0], to: now.toISOString().split('T')[0] }
+    params: { from: fromDate.toISOString().split('T')[0], to: now.toISOString().split('T')[0] },
+    timeout: BAKALARI_TIMEOUT_MS
   });
 
   const subjects = res.data?.Subjects ?? res.data?.subjects ?? [];
@@ -129,7 +133,8 @@ const AVERAGE_SUBJECTS = [
 async function fetchSubjectAverages() {
   const { baseUrl, token } = await bakalariLogin();
   const res = await axios.get(`${baseUrl}/api/3/marks`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: BAKALARI_TIMEOUT_MS
   });
 
   const subjects = res.data?.Subjects ?? [];
